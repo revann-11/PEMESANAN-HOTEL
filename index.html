@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>HotelKu Traveloka Style</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #f1f5f9;
+}
+
+/* NAV */
+nav {
+    background: #1d4ed8;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* SEARCH */
+.search-box {
+    background: white;
+    padding: 20px;
+    margin: -40px auto 20px;
+    width: 80%;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+/* CARD */
+.card {
+    background: white;
+    margin: 10px;
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    gap: 15px;
+}
+
+.card img {
+    width: 200px;
+    border-radius: 10px;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #1d4ed8;
+    color: white;
+    cursor: pointer;
+}
+
+/* PAGE */
+.page { display: none; padding: 20px; }
+.active { display: block; }
+
+/* DETAIL */
+.room {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 10px;
+}
+
+/* SUMMARY */
+.summary {
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<nav>
+<h2>HotelKu</h2>
+</nav>
+
+<!-- HOME -->
+<section id="home" class="page active">
+
+<div class="search-box">
+<input type="text" id="search" placeholder="Cari kota / hotel">
+<button onclick="searchHotel()">Cari</button>
+</div>
+
+<div id="hotelList"></div>
+
+</section>
+
+<!-- DETAIL -->
+<section id="detail" class="page">
+<div id="detailHotel"></div>
+<h3>Pilih Kamar</h3>
+<div id="roomList"></div>
+</section>
+
+<!-- BOOKING -->
+<section id="booking" class="page">
+
+<h2>Isi Data Booking</h2>
+
+<input type="text" id="nama" placeholder="Nama"><br>
+<input type="date" id="checkin"><br>
+<input type="date" id="checkout"><br>
+
+<select id="kamar">
+<option value="300000">Standard - 300k</option>
+<option value="500000">Deluxe - 500k</option>
+<option value="800000">Suite - 800k</option>
+</select><br>
+
+<button onclick="hitung()">Hitung Harga</button>
+
+<div class="summary" id="summary"></div>
+
+<button onclick="booking()">Booking Sekarang</button>
+
+</section>
+
+<script>
+
+// DATA HOTEL
+const hotels = [
+{nama:"Hotel Jakarta", lokasi:"Jakarta", rating:4.5, img:"https://source.unsplash.com/400x300/?hotel"},
+{nama:"Bali Resort", lokasi:"Bali", rating:4.8, img:"https://source.unsplash.com/400x300/?resort"},
+{nama:"Lombok Hotel", lokasi:"Lombok", rating:4.3, img:"https://source.unsplash.com/400x300/?beach"},
+];
+
+// NAV
+function showPage(id){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+// LOAD HOTEL
+function loadHotel(list = hotels){
+let html="";
+list.forEach((h,i)=>{
+html+=`
+<div class="card">
+<img src="${h.img}">
+<div>
+<h3>${h.nama}</h3>
+<p>${h.lokasi}</p>
+<p>⭐ ${h.rating}</p>
+<button onclick="detail(${i})">Lihat</button>
+</div>
+</div>
+`;
+});
+hotelList.innerHTML=html;
+}
+
+// SEARCH
+function searchHotel(){
+let key = search.value.toLowerCase();
+let filtered = hotels.filter(h => 
+h.nama.toLowerCase().includes(key) ||
+h.lokasi.toLowerCase().includes(key)
+);
+loadHotel(filtered);
+}
+
+// DETAIL
+function detail(i){
+let h = hotels[i];
+detailHotel.innerHTML = `
+<img src="${h.img}" width="300">
+<h2>${h.nama}</h2>
+<p>${h.lokasi}</p>
+<p>⭐ ${h.rating}</p>
+`;
+
+roomList.innerHTML = `
+<div class="room">Standard - Rp300k <button onclick="goBooking()">Pilih</button></div>
+<div class="room">Deluxe - Rp500k <button onclick="goBooking()">Pilih</button></div>
+<div class="room">Suite - Rp800k <button onclick="goBooking()">Pilih</button></div>
+`;
+
+showPage('detail');
+}
+
+// KE BOOKING
+function goBooking(){
+showPage('booking');
+}
+
+// HITUNG HARGA
+function hitung(){
+let harga = parseInt(kamar.value);
+let inDate = new Date(checkin.value);
+let outDate = new Date(checkout.value);
+
+let hari = (outDate - inDate) / (1000*60*60*24);
+let total = harga * hari;
+
+summary.innerHTML = `
+<p>Nama: ${nama.value}</p>
+<p>Lama inap: ${hari} hari</p>
+<p>Total: Rp ${total}</p>
+`;
+}
+
+// BOOKING
+function booking(){
+alert("Booking berhasil! (simulasi)");
+}
+
+// INIT
+loadHotel();
+
+</script>
+
+</body>
+</html>
