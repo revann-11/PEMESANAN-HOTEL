@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Hotel Booking</title>
+
+<!-- STYLE -->
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: #020617;
+}
+
+button {
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+}
+
+input {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+}
+
+.page {
+    display: none;
+    padding: 20px;
+}
+
+.active {
+    display: block;
+}
+
+.banner {
+    height: 300px;
+    background: url('https://source.unsplash.com/1600x600/?hotel');
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+}
+
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: #1e293b;
+    margin: 10px;
+    padding: 15px;
+    border-radius: 15px;
+    width: 200px;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+</style>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <h2>HotelKu</h2>
+    <div>
+        <button onclick="showPage('home')">Home</button>
+        <button onclick="showPage('hotel')">Hotel</button>
+        <button onclick="showPage('login')">Login</button>
+        <button onclick="showPage('admin')">Admin</button>
+    </div>
+</nav>
+
+<!-- HOME -->
+<section id="home" class="page active">
+    <div class="banner">
+        <h1>Cari Hotel Terbaik</h1>
+        <input type="text" id="search" placeholder="Cari hotel...">
+        <button onclick="searchHotel()">Cari</button>
+    </div>
+
+    <h2>Hotel Populer</h2>
+    <div id="hotelList" class="card-container"></div>
+</section>
+
+<!-- HOTEL -->
+<section id="hotel" class="page">
+    <h2>Daftar Hotel</h2>
+    <div id="allHotels" class="card-container"></div>
+</section>
+
+<!-- DETAIL -->
+<section id="detail" class="page">
+    <h2>Detail Hotel</h2>
+    <div id="detailHotel"></div>
+</section>
+
+<!-- BOOKING -->
+<section id="booking" class="page">
+    <h2>Booking</h2>
+    <input type="text" id="nama" placeholder="Nama">
+    <input type="date" id="checkin">
+    <input type="date" id="checkout">
+    <input type="number" id="tamu" placeholder="Jumlah tamu">
+    <button onclick="booking()">Booking</button>
+</section>
+
+<!-- LOGIN -->
+<section id="login" class="page">
+    <h2>Login / Register</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <br>
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+</section>
+
+<!-- ADMIN -->
+<section id="admin" class="page">
+    <h2>Dashboard Admin</h2>
+
+    <input type="text" id="namaHotel" placeholder="Nama Hotel">
+    <input type="text" id="lokasiHotel" placeholder="Lokasi">
+    <input type="number" id="hargaHotel" placeholder="Harga">
+    <button onclick="tambahHotel()">Tambah Hotel</button>
+
+    <h3>Data Booking</h3>
+    <div id="dataBooking"></div>
+</section>
+
+<!-- SCRIPT -->
+<script>
+
+// 🔥 GANTI DENGAN FIREBASE PUNYA KAMU
+const firebaseConfig = {
+    apiKey: "AIzaSyCwFQjXdCCcwhgfu-wZ-JpSq1QdYaDc9Ek",
+    authDomain: "PROJECT.firebaseapp.com",
+    projectId: "PROJECT_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// NAV
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// LOAD HOTEL
+function loadHotel() {
+    db.collection("hotel").get().then(snapshot => {
+        let html = "";
+        snapshot.forEach(doc => {
+            let d = doc.data();
+            html += `
+                <div class="card">
+                    <h3>${d.nama}</h3>
+                    <p>${d.lokasi}</p>
+                    <p>Rp ${d.harga}</p>
+                    <button onclick="detail('${doc.id}')">Detail</button>
+                </div>
+            `;
+        });
+        hotelList.innerHTML = html;
+        allHotels.innerHTML = html;
+    });
+}
+
+// DETAIL
+function detail(id) {
+    db.collection("hotel").doc(id).get().then(doc => {
+        let d = doc.data();
+        detailHotel.innerHTML = `
+            <h3>${d.nama}</h3>
+            <p>${d.lokasi}</p>
+            <p>Rp ${d.harga}</p>
+            <button onclick="showPage('booking')">Booking</button>
+        `;
+        showPage('detail');
+    });
+}
+
+// BOOKING
+function booking() {
+    db.collection("booking").add({
+        nama: nama.value,
+        checkin: checkin.value,
+        checkout: checkout.value,
+        tamu: tamu.value
+    });
+    alert("Booking berhasil!");
+}
+
+// LOGIN
+function login() {
+    auth.signInWithEmailAndPassword(email.value, password.value)
+    .then(() => {
+        alert("Login berhasil");
+        showPage('admin');
+    })
+    .catch(e => alert(e.message));
+}
+
+// REGISTER
+function register() {
+    auth.createUserWithEmailAndPassword(email.value, password.value)
+    .then(() => alert("Akun dibuat"))
+    .catch(e => alert(e.message));
+}
+
+// TAMBAH HOTEL
+function tambahHotel() {
+    db.collection("hotel").add({
+        nama: namaHotel.value,
+        lokasi: lokasiHotel.value,
+        harga: hargaHotel.value
+    });
+    alert("Hotel ditambahkan");
+    loadHotel();
+}
+
+// LOAD BOOKING
+function loadBooking() {
+    db.collection("booking").get().then(snapshot => {
+        let html = "";
+        snapshot.forEach(doc => {
+            let d = doc.data();
+            html += `<p>${d.nama} | ${d.checkin}</p>`;
+        });
+        dataBooking.innerHTML = html;
+    });
+}
+
+// SEARCH
+function searchHotel() {
+    let keyword = search.value.toLowerCase();
+    db.collection("hotel").get().then(snapshot => {
+        let html = "";
+        snapshot.forEach(doc => {
+            let d = doc.data();
+            if (d.nama.toLowerCase().includes(keyword)) {
+                html += `
+                    <div class="card">
+                        <h3>${d.nama}</h3>
+                        <p>${d.lokasi}</p>
+                        <p>Rp ${d.harga}</p>
+                    </div>
+                `;
+            }
+        });
+        hotelList.innerHTML = html;
+    });
+}
+
+// INIT
+loadHotel();
+loadBooking();
+
+</script>
+
+</body>
+</html>
